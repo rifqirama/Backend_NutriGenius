@@ -18,7 +18,21 @@ exports.getDashboardData = (req, res) => {
         }
 
         const user = results[0];
-
+        const tdee = user.calculated_tdee || 2000;
+        const caloriesConsumed = 0;
+        const remainingCalories = tdee - caloriesConsumed;
+        // Hitung Progress Bar (0.0 sampai 1.0)
+        let progress = 0;
+        if (tdee > 0) {
+            progress = caloriesConsumed / tdee;
+        }
+        // Hitung Makro Nutrisi (Estimasi Standard)
+        // Protein 15%, Lemak 25%, Karbo 60%
+        // Dibagi 4 (Protein/Karbo) atau 9 (Lemak) untuk dapat gram-nya
+        const proteinTarget = Math.round((tdee * 0.15) / 4);
+        const fatTarget = Math.round((tdee * 0.25) / 9);
+        const carbsTarget = Math.round((tdee * 0.60) / 4);
+        
         // Format respon agar rapi
         const responseData = {
             displayName: user.name,
@@ -27,7 +41,6 @@ exports.getDashboardData = (req, res) => {
             height: user.height_cm,
             tdee: user.calculated_tdee,
             bmr: user.calculated_bmr,
-            // Kita bisa tambah logika lain di sini nanti
         };
 
         res.status(200).json({ 
