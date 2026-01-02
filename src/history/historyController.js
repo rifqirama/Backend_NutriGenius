@@ -1,4 +1,4 @@
-const db = require('../config/database');
+const db = require('../../config/database');
 exports.getWeeklyStats = (req, res) => {
     const userId = req.params.user_id;
     

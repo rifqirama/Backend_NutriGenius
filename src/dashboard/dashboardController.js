@@ -18,6 +18,7 @@ exports.getDashboardData = (req, res) => {
         }
 
         const user = results[0];
+
         const tdee = user.calculated_tdee || 2000;
         const caloriesConsumed = 0;
         const remainingCalories = tdee - caloriesConsumed;
@@ -35,7 +36,7 @@ exports.getDashboardData = (req, res) => {
         
         // Format respon agar rapi
         const responseData = {
-            displayName: user.name,
+            displayName: user.full_name,
             gender: user.gender,
             weight: user.weight_kg,
             height: user.height_cm,
