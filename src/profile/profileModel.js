@@ -1,46 +1,67 @@
 const db = require('../../config/database');
 
 const ProfileModel = {
-    // 1. AMBIL PROFIL
-    getProfileByEmail: (email, callback) => {
-        const query = `SELECT * FROM users WHERE email = ?`;
+
+    getUserByEmail: (email, callback) => {
+        const query = `
+            SELECT 
+                id, email, full_name, gender, birth_date, 
+                weight_kg, height_cm, activity_id, health_id, 
+                profile_picture, created_at 
+            FROM users 
+            WHERE email = ?
+        `;
         db.query(query, [email], callback);
     },
 
-    // 2. UPDATE PROFIL
-    updateProfile: (email, data, callback) => {
+    updateProfileData: (email, data, callback) => {
         const query = `
             UPDATE users 
             SET 
-                full_name = ?, 
-                weight_kg = ?, 
-                height_cm = ?, 
-                gender = ?, 
-                birth_date = ?, 
-                health_id = ?
+                full_name = ?,
+                gender = ?,
+                birth_date = ?,
+                weight_kg = ?,
+                height_cm = ?,
+                activity_id = ?,
+                health_id = ?,
+                calculated_bmr = ?,
+                calculated_tdee = ?,
+                updated_at = NOW()
             WHERE email = ?
         `;
         
-        db.query(
-            query, 
-            [data.full_name, data.weight_kg, data.height_cm, data.gender, data.birth_date, data.health_id, email], 
-            callback
-        );
+        const params = [
+            data.full_name,
+            data.gender,
+            data.birth_date,
+            data.weight_kg,
+            data.height_cm,
+            data.activity_id,
+            data.health_id,
+            data.calculated_bmr,
+            data.calculated_tdee,
+            email
+        ];
+
+        db.query(query, params, callback);
     },
 
-    // 3. AMBIL PASSWORD LAMA (Untuk Verifikasi sebelum ganti)
-    getPasswordById: (userId, callback) => {
-        const query = `SELECT password FROM users WHERE user_id = ?`;
-        db.query(query, [userId], callback);
+    updateEmail: (oldEmail, newEmail, callback) => {
+        const query = `UPDATE users SET email = ?, updated_at = NOW() WHERE email = ?`;
+        db.query(query, [newEmail, oldEmail], callback);
     },
 
-    // 4. UPDATE PASSWORD
-    updatePassword: (userId, newPassword, callback) => {
-        const query = `UPDATE users SET password = ? WHERE user_id = ?`;
-        db.query(query, [newPassword, userId], callback);
+    updateProfilePicture: (email, imagePath, callback) => {
+        const query = `UPDATE users SET profile_picture = ?, updated_at = NOW() WHERE email = ?`;
+        db.query(query, [imagePath, email], callback);
     },
 
-    // 5. HAPUS AKUN PERMANEN
+    deleteProfilePicture: (email, callback) => {
+        const query = `UPDATE users SET profile_picture = NULL, updated_at = NOW() WHERE email = ?`;
+        db.query(query, [email], callback);
+    },
+
     deleteAccount: (email, callback) => {
         const query = `DELETE FROM users WHERE email = ?`;
         db.query(query, [email], callback);
