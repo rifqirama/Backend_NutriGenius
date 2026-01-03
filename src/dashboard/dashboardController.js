@@ -10,6 +10,7 @@ exports.getDashboardData = (req, res) => {
 
     DashboardModel.getUserProfile(email, (err, results) => {
         if (err) {
+            console.error("LOG ERROR MYSQL:", err.sqlMessage);
             return res.status(500).json({ success: false, message: 'Database error', error: err });
         }
 
@@ -21,7 +22,7 @@ exports.getDashboardData = (req, res) => {
 
         // Format respon agar rapi
         const responseData = {
-            displayName: user.name,
+            displayName: user.full_name,
             gender: user.gender,
             weight: user.weight_kg,
             height: user.height_cm,

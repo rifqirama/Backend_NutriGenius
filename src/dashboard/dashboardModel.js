@@ -6,7 +6,7 @@ const DashboardModel = {
         const query = `
             SELECT 
                 email, 
-                name, 
+                full_name AS name, 
                 gender, 
                 birth_date, 
                 weight_kg, 
