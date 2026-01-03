@@ -1,17 +1,18 @@
-const db = require('../../config/database');
+const db = require('../../config/db');
 
 const ProfileModel = {
-    updateProfile: (data, callback) => {
+    getUserData: (email, callback) => {
         const query = `
-            UPDATE users 
-            SET full_name = ?, weight_kg = ?, height_cm = ?, gender = ?, birth_date = ? 
+            SELECT 
+                full_name, email, gender, 
+                weight_kg, height_cm, 
+                birth_date, 
+                activity_id, health_id,
+                created_at
+            FROM users 
             WHERE email = ?
         `;
-        db.query(
-            query, 
-            [data.name, data.weight, data.height, data.gender, data.birth_date, data.email], 
-            callback
-        );
+        db.query(query, [email], callback);
     }
 };
 
