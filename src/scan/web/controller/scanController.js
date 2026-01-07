@@ -25,20 +25,25 @@ exports.processScan = async (req, res) => {
     });
     
     const { email } = req.body;
-    console.log(`🔍 Processing Preview for: ${email}`);
+    console.log(`🔍 Mencari di Database User dengan email: '${email}'`);
 
     const user = await new Promise((resolve, reject) => {
         AuthModel.findByEmail(email, (err, results) => {
             if (err) {
+                console.error("💥 SQL Error:", err);
                 reject(err);
-            } else if (!results || results.length === 0) {
-                resolve(null);
             } else {
-                resolve(results[0]);
+                console.log("📂 Hasil Query DB:", results); 
+                
+                if (!results || results.length === 0) {
+                    resolve(null); 
+                } else {
+                    resolve(results[0]); 
+                }
             }
         });
     });
-    
+
     if (!user) {
        return res.status(404).json({ success: false, message: "User tidak ditemukan" });
     }
@@ -56,10 +61,17 @@ exports.processScan = async (req, res) => {
       user
     );
 
+    const responseData = {
+        ...result,   
+        image_path: req.file.filename
+    };
+
+    console.log("📤 Mengirim Data ke Flutter:", responseData);
+
     res.status(200).json({
       success: true,
       message: "Analisis selesai (Preview Mode)",
-      data: result
+      data: responseData
     });
 
   } catch (error) {
