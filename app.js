@@ -9,6 +9,7 @@ const authRoutes = require('./src/auth/authRoutes');
 const firstpageRoutes = require('./src/firstpage/firstpageRoutes');
 const dashboardRoutes = require('./src/dashboard/dashboardRoutes');
 const historyRoutes = require('./src/history/historyRoutes');
+const notificationRoutes = require('./src/notification/notificationRoutes'); // Import baru
 const profileRoutes = require('./src/profile/profileRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +25,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/firstpage', firstpageRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/history', historyRoutes);
+app.use('/api/notifications', notificationRoutes); // Daftarkan route baru
 app.use('/api/profile', profileRoutes);
 
 // Test Route
