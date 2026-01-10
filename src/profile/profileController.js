@@ -13,20 +13,6 @@ const calculateAge = (birthDate) => {
     return age;
 };
 
-const calculateMetrics = (gender, weight, height, age, activityId) => {
-
-    let bmr = (10 * weight) + (6.25 * height) - (5 * age);
-    bmr += (gender === 'Laki-laki') ? 5 : -161;
-
-    const multipliers = { 1: 1.2, 2: 1.375, 3: 1.55, 4: 1.725, 5: 1.9 };
-    const factor = multipliers[activityId] || 1.2;
-    
-    return {
-        bmr: bmr,
-        tdee: bmr * factor
-    };
-};
-
 exports.getProfile = (req, res) => {
     const email = req.query.email || req.body.email;
     if (!email) return res.status(400).json({ success: false, message: "Email required" });
@@ -53,27 +39,42 @@ exports.updateProfile = (req, res) => {
 
     if (!email) return res.status(400).json({ success: false, message: "Email required" });
 
-    const age = calculateAge(birth_date);
-    const metrics = calculateMetrics(gender, parseFloat(weight_kg), parseFloat(height_cm), age, parseInt(activity_id));
+    ProfileModel.getActivityMultiplier(activity_id, (err, results) => {
+        if (err) return res.status(500).json({ success: false, message: "Error cek activity", error: err });
+        
+        let multiplier = 1.2;
+        if (results.length > 0) {
+            multiplier = results[0].multiplier;
+        }
+
+        const age = calculateAge(birth_date);
+        const weight = parseFloat(weight_kg);
+        const height = parseFloat(height_cm);
+
+        let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+        bmr += (gender === 'Laki-laki') ? 5 : -161;
+
+        const tdee = bmr * multiplier;
 
     const updateData = {
         full_name,
         gender,
         birth_date,
-        weight_kg: parseFloat(weight_kg),
-        height_cm: parseFloat(height_cm),
+        weight_kg: weight,
+        height_cm: height,
         activity_id: parseInt(activity_id),
         health_id: parseInt(health_id),
-        calculated_bmr: metrics.bmr,
-        calculated_tdee: metrics.tdee
+        calculated_bmr: bmr,
+        calculated_tdee: tdee
     };
 
-    ProfileModel.updateProfileData(email, updateData, (err, result) => {
-        if (err) return res.status(500).json({ success: false, error: err });
+    ProfileModel.updateProfileData(email, updateData, (errUpdate, result) => {
+        if (errUpdate) return res.status(500).json({ success: false, error: errUpdate });
         res.status(200).json({ 
             success: true, 
             message: "Profil berhasil diperbarui & Nutrisi dihitung ulang!",
             data: updateData
+            });
         });
     });
 };
