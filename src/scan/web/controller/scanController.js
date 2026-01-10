@@ -1,13 +1,14 @@
 const AnalyzeImageUseCase = require('../../domain/usecases/analyzeImageUseCase');
+const SaveScanUseCase = require('../../domain/usecases/saveScanUseCase');
 const ScanRepositoryImpl = require('../../data/repositories/scanRepositoryImpl');
 const GeminiService = require('../../data/services/geminiService');
 const AuthModel = require('../../../auth/authModel');
 
-const ScanHistory = require('../../data/models/scanHistory');
 
 const geminiService = new GeminiService();
 const scanRepository = new ScanRepositoryImpl();
-const useCase = new AnalyzeImageUseCase(scanRepository, geminiService);
+const analyzeUseCase = new AnalyzeImageUseCase(scanRepository, geminiService);
+const saveScanUseCase = new SaveScanUseCase(scanRepository);
 
 exports.processScan = async (req, res) => {
   try {
@@ -53,7 +54,7 @@ exports.processScan = async (req, res) => {
         tdee: user.tdee
     });
 
-    const result = await useCase.executeAnalysisOnly(
+    const result = await analyzeUseCase.executeAnalysisOnly(
       email,
       req.file.path,
       req.file.filename,
@@ -99,28 +100,40 @@ exports.saveScanResult = async (req, res) => {
       image_path 
     } = req.body;
 
-    const user = await User.findOne({ where: { email } });
+    // Get user from database
+    const user = await new Promise((resolve, reject) => {
+      AuthModel.findByEmail(email, (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results && results.length > 0 ? results[0] : null);
+        }
+      });
+    });
+
     if (!user) {
       return res.status(404).json({ success: false, message: "User tidak ditemukan" });
     }
 
-    const savedData = await scanRepository.save({
-      userId: user.id,
-      foodName: food_name,
+    // Prepare analysis result
+    const analysisResult = {
+      food_name,
       calories: parseFloat(calories),
       protein: parseFloat(protein),
       carbs: parseFloat(carbs),
       fat: parseFloat(fat),
       sugar: parseFloat(sugar),
-      aiSuggestion: ai_suggestion,
-      imagePath: image_path
-    });
+      ai_suggestion
+    };
 
-    res.status(201).json({
-      success: true,
-      message: "Data berhasil disimpan ke Jurnal!",
-      data: savedData
-    });
+    // Use the SaveScanUseCase
+    const savedData = await saveScanUseCase.executeSaveScan(
+      user.id,
+      analysisResult,
+      image_path
+    );
+
+    res.status(201).json(savedData);
 
   } catch (error) {
     console.error("❌ ERROR SAVE:", error);
