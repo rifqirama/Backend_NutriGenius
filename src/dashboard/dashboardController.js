@@ -24,7 +24,7 @@ exports.getDashboardData = (req, res) => {
 
         const dbName = user.full_name;
 
-        const tdee = user.calculated_tdee || 2000;
+        const tdee = user.calculated_tdee || 0;
         const caloriesConsumed = 0;
 
         const proteinTarget = Math.round((tdee * 0.15) / 4);

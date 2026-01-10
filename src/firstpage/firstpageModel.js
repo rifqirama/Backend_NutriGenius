@@ -1,6 +1,17 @@
 const db = require('../../config/database');
 
 const FirstPageModel = {
+
+    getAllActivities: (callback) => {
+        const query = "SELECT * FROM master_activity_levels ORDER BY id ASC";
+        db.query(query, callback);
+    },
+
+    getAllHealthConditions: (callback) => {
+        const query = "SELECT * FROM master_health_conditions ORDER BY id ASC";
+        db.query(query, callback);
+    },
+    
     updateProfile: (email, data, callback) => {
         const query = `
             UPDATE users 
