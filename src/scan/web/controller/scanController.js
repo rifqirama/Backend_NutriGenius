@@ -185,3 +185,16 @@ exports.getHistory = async (req, res) => {
     });
   }
 };
+
+exports.deleteHistory = (req, res) => {
+    const { id } = req.params;
+    
+    const HistoryModel = require('../../../history/historyModel');
+    
+    HistoryModel.delete(id, (err, result) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: err.message });
+        }
+        res.status(200).json({ success: true, message: "Berhasil dihapus" });
+    });
+};

@@ -5,6 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 router.get('/history', scanController.getHistory);
+router.delete('/delete/:id', scanController.deleteHistory);
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {

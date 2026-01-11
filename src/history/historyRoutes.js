@@ -36,10 +36,10 @@ const upload = multer({
 router.post('/analyze', upload.single('image'), scanController.processScan);
 router.post('/save', scanController.saveScanResult);
 
-router.get('/history', historyController.getHistory); 
+router.get('/', historyController.getHistory); 
 
-router.delete('/history/:id', historyController.deleteHistory);
+router.delete('/:id', historyController.deleteHistory);
 
-router.post('/history/add', historyController.addHistory);
+router.post('/add', historyController.addHistory);
 
 module.exports = router;
