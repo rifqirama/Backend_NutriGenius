@@ -13,13 +13,13 @@ class GeminiService {
   async analyzeImage(imagePath, mimeType, userProfile = {}) {
     try {
       const model = this.genAI.getGenerativeModel({ 
-        model: "gemini-flash-latest", 
+        model: "gemini-2.5-flash-lite", 
         generationConfig: { responseMimeType: "application/json" } 
       });
 
       const imageBuffer = fs.readFileSync(imagePath);
       
-      const tdee = userProfile.calculated_tdee || userProfile.tdee || 2000;
+      const tdee = userProfile.calculated_tdee || userProfile.tdee || 0;
       
       const condition = userProfile.health_condition || 'Normal';
 

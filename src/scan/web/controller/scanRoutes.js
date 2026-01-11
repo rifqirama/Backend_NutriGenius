@@ -4,6 +4,7 @@ const scanController = require('./scanController');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+router.get('/history', scanController.getHistory);
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {

@@ -56,6 +56,164 @@ class ScanRepositoryImpl {
       ...data
     };
   }
+
+getHistory(userId, mealTypeId) {
+    return new Promise((resolve, reject) => {
+      // 1. Definisikan Query
+      let query = `
+        SELECT 
+          jd.id,
+          jd.food_name,
+          jd.calories,
+          jd.protein,
+          jd.carbs,
+          jd.fat,
+          jd.sugar,
+          jd.image_path,
+          mmt.meal_name,
+          dj.date
+        FROM journal_details jd
+        JOIN daily_journals dj ON jd.journal_id = dj.id
+        LEFT JOIN master_meal_types mmt ON jd.meal_type_id = mmt.id
+        WHERE dj.user_id = ?
+      `;
+
+      const params = [userId];
+
+      // 2. Logika Filter Meal Type
+      if (mealTypeId && mealTypeId != 0) {
+        query += ` AND jd.meal_type_id = ?`;
+        params.push(mealTypeId);
+      }
+
+      // 3. Urutkan (Tanggal Jurnal DESC, lalu ID Detail DESC)
+      query += ` ORDER BY dj.date DESC, jd.id DESC`;
+
+      // 4. Eksekusi menggunakan db.query (Gaya Callback)
+      db.query(query, params, (err, rows) => {
+        if (err) {
+          console.error("❌ History SQL Error:", err);
+          return reject(err);
+        }
+        // Sukses, kembalikan data rows
+        resolve(rows);
+      });
+    });
+  }
+
+  saveScanToJournal(userId, scanData) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const today = new Date().toISOString().split('T')[0];
+
+        const journalQuery = `
+          INSERT INTO daily_journals (user_id, date, total_calories, total_protein, total_carbs, total_fat)
+          VALUES (?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE 
+            total_calories = total_calories + VALUES(total_calories),
+            total_protein = total_protein + VALUES(total_protein),
+            total_carbs = total_carbs + VALUES(total_carbs),
+            total_fat = total_fat + VALUES(total_fat)
+        `;
+
+        const journalParams = [
+          userId,
+          today,
+          scanData.calories || 0,
+          scanData.protein || 0,
+          scanData.carbs || 0,
+          scanData.fat || 0
+        ];
+
+        db.query(journalQuery, journalParams, (err, journalResult) => {
+          if (err) {
+            console.error("❌ Daily Journal Error:", err);
+            return reject(new Error(`Gagal membuat jurnal harian: ${err.message}`));
+          }
+
+          // Get the journal_id (either created or existing)
+          const getJournalQuery = `
+            SELECT id FROM daily_journals 
+            WHERE user_id = ? AND date = ?
+          `;
+
+          db.query(getJournalQuery, [userId, today], (err, journalRows) => {
+            if (err || !journalRows || journalRows.length === 0) {
+              console.error("❌ Get Journal Error:", err);
+              return reject(new Error("Gagal mendapatkan jurnal harian"));
+            }
+
+            const journalId = journalRows[0].id;
+
+            const foodLogQuery = `
+              INSERT INTO food_logs (email, food_name, calories, protein, carbs, fat)
+              VALUES (
+                (SELECT email FROM users WHERE id = ?),
+                ?, ?, ?, ?, ?
+              )
+            `;
+
+            const foodLogParams = [
+              userId,
+              scanData.foodName || "Makanan Tidak Teridentifikasi",
+              Math.round(scanData.calories) || 0,
+              Math.round(scanData.protein) || 0,
+              Math.round(scanData.carbs) || 0,
+              Math.round(scanData.fat) || 0
+            ];
+
+            db.query(foodLogQuery, foodLogParams, (err, foodLogResult) => {
+              if (err) {
+                console.error("❌ Food Log Error:", err);
+                return reject(new Error(`Gagal menyimpan food log: ${err.message}`));
+              }
+
+              const journalDetailQuery = `
+                INSERT INTO journal_details 
+                (journal_id, meal_type_id, food_name, calories, protein, carbs, fat, sugar, ai_suggestion, image_path)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `;
+
+              const journalDetailParams = [
+                journalId,
+                4, // Snack / Camilan as default meal type
+                scanData.foodName || "Makanan Tidak Teridentifikasi",
+                Math.round(scanData.calories) || 0,
+                Math.round(scanData.protein) || 0,
+                Math.round(scanData.carbs) || 0,
+                Math.round(scanData.fat) || 0,
+                Math.round(scanData.sugar) || 0,
+                scanData.aiSuggestion || "",
+                scanData.imagePath || ""
+              ];
+
+              db.query(journalDetailQuery, journalDetailParams, (err, detailResult) => {
+                if (err) {
+                  console.error("❌ Journal Detail Error:", err);
+                  return reject(new Error(`Gagal menyimpan detail jurnal: ${err.message}`));
+                }
+
+                resolve({
+                  success: true,
+                  journalId: journalId,
+                  foodLogId: foodLogResult.insertId,
+                  detailId: detailResult.insertId,
+                  data: {
+                    ...scanData,
+                    date: today
+                  }
+                });
+              });
+            });
+          });
+        });
+
+      } catch (error) {
+        console.error("❌ Repository Error:", error);
+        reject(new Error(`Gagal menyimpan ke database: ${error.message}`));
+      }
+    });
+  }
 }
 
 module.exports = ScanRepositoryImpl;

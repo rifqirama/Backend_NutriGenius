@@ -1,13 +1,16 @@
 const AnalyzeImageUseCase = require('../../domain/usecases/analyzeImageUseCase');
+const GetHistoryUseCase = require('../../domain/usecases/getHistoryUseCase');
+const SaveScanUseCase = require('../../domain/usecases/saveScanUseCase')
 const ScanRepositoryImpl = require('../../data/repositories/scanRepositoryImpl');
 const GeminiService = require('../../data/services/geminiService');
 const AuthModel = require('../../../auth/authModel');
-
-const ScanHistory = require('../../data/models/scanHistory');
+const { request } = require('express');
 
 const geminiService = new GeminiService();
 const scanRepository = new ScanRepositoryImpl();
 const useCase = new AnalyzeImageUseCase(scanRepository, geminiService);
+const saveScanUseCase = new SaveScanUseCase(scanRepository);
+const getHistoryUseCase = new GetHistoryUseCase(scanRepository);
 
 exports.processScan = async (req, res) => {
   try {
@@ -99,22 +102,38 @@ exports.saveScanResult = async (req, res) => {
       image_path 
     } = req.body;
 
-    const user = await User.findOne({ where: { email } });
+    const user = await new Promise((resolve, reject) => {
+      AuthModel.findByEmail(email, (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results && results.length > 0 ? results[0] : null);
+        }
+      });
+    });
+
     if (!user) {
       return res.status(404).json({ success: false, message: "User tidak ditemukan" });
     }
 
-    const savedData = await scanRepository.save({
-      userId: user.id,
-      foodName: food_name,
+    console.log("📦 Body Request:", req.body);
+    console.log("🥦 Analysis Data:", { food_name, calories, protein });
+
+    const analysisResult = {
+      food_name,
       calories: parseFloat(calories),
       protein: parseFloat(protein),
       carbs: parseFloat(carbs),
       fat: parseFloat(fat),
       sugar: parseFloat(sugar),
-      aiSuggestion: ai_suggestion,
-      imagePath: image_path
-    });
+      ai_suggestion
+    };
+
+    const savedData = await saveScanUseCase.executeSaveScan(
+      user.id,
+      analysisResult,
+      image_path
+    );
 
     res.status(201).json({
       success: true,
@@ -127,6 +146,42 @@ exports.saveScanResult = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || "Gagal menyimpan data"
+    });
+  }
+};
+
+exports.getHistory = async (req, res) => {
+  try {
+    const { email, meal_type_id } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email diperlukan" });
+    }
+
+    const user = await new Promise((resolve, reject) => {
+      AuthModel.findByEmail(email, (err, results) => {
+        if (err) reject(err);
+        else resolve(results && results.length > 0 ? results[0] : null);
+      });
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User tidak ditemukan" });
+    }
+
+    const historyData = await getHistoryUseCase.execute(user.id, meal_type_id);
+
+    res.status(200).json({
+      success: true,
+      message: "Berhasil mengambil riwayat",
+      data: historyData
+    });
+
+  } catch (error) {
+    console.error("❌ History Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Gagal mengambil riwayat scan"
     });
   }
 };

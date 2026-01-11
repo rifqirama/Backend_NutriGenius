@@ -15,7 +15,7 @@ const HistoryModel = {
                 sh.createdAt AS date,
                 -- ⚠️ PENTING: Kita TIDAK ambil 'aiSuggestion' disini biar loading cepat!
                 u.email
-            FROM scan_history sh
+            FROM journal_details sh
             JOIN users u ON sh.userId = u.id
             WHERE u.email = ?
             ORDER BY sh.createdAt DESC
@@ -30,14 +30,14 @@ const HistoryModel = {
                 id, foodName AS food_name, calories, protein, carbs, fat, sugar, 
                 aiSuggestion AS ai_suggestion, -- Nah, disini baru kita ambil teks panjangnya
                 imagePath AS image_path, createdAt AS date 
-            FROM scan_history 
+            FROM journal_details 
             WHERE id = ?
         `;
         db.query(query, [id], callback);
     },
 
     delete: (id, callback) => {
-        const query = 'DELETE FROM scan_history WHERE id = ?';
+        const query = 'DELETE FROM journal_details WHERE id = ?';
         db.query(query, [id], callback);
     }
 };
