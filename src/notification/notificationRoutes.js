@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('./notificationController');
+const notificationController = require('./notificationController');
 
-// Kita pakai POST biar sama kayak Dashboard & FirstPage
-router.post('/', controller.getNotifications);
+// Endpoint: /api/notifications
+router.get('/', notificationController.getNotifications);
 
 module.exports = router;

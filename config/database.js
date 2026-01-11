@@ -5,14 +5,24 @@ const db = mysql.createConnection({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'db_nutrigenius'
+    database: process.env.DB_NAME || 'db_nutrigenius',
+
+    dateStrings: true,
+    enableKeepAlive: true
 });
 
 db.connect((err) => {
     if (err) {
-        console.error('Database connection failed:', err);
+        console.error('❌ Database connection failed:', err);
     } else {
-        console.log('Connected to MySQL Database');
+        console.log('✅ Connected to MySQL Database');
+    }
+});
+
+db.on('error', (err) => {
+    console.error('⚠️ Database Error:', err);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+        console.error('❌ Koneksi ke Database TERPUTUS. Harap Restart Server Backend.');
     }
 });
 

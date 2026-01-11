@@ -3,11 +3,8 @@ const fs = require("fs");
 
 class GeminiService {
   constructor() {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY tidak ditemukan di file .env");
-    }
-    this.genAI = new GoogleGenerativeAI(apiKey);
+    //ganti dengan apikeymu
+    this.genAI = new GoogleGenerativeAI("use your own api key");
   }
 
   async analyzeImage(imagePath, mimeType, userProfile = {}) {

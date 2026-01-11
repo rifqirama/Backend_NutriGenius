@@ -14,6 +14,11 @@ const ProfileModel = {
         db.query(query, [email], callback);
     },
 
+    getActivityMultiplier: (activityId, callback) => {
+        const query = "SELECT multiplier FROM master_activity_levels WHERE id = ?";
+        db.query(query, [activityId], callback);
+    },
+
     updateProfileData: (email, data, callback) => {
         const query = `
             UPDATE users 
