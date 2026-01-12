@@ -28,7 +28,8 @@ const HistoryModel = {
             SELECT 
                 id, foodName AS food_name, calories, protein, carbs, fat, sugar, 
                 aiSuggestion AS ai_suggestion, -- Nah, disini baru kita ambil teks panjangnya
-                imagePath AS image_path, scan_timestamp AS createdAt 
+                imagePath AS image_path, 
+                DATE_FORMAT(scan_timestamp, '%Y-%m-%dT%H:%i:%s') AS created_at
             FROM journal_details 
             WHERE id = ?
         `;
