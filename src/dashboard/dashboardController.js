@@ -1,39 +1,29 @@
-const DashboardModel = require('./dashboardModel');
+const GetDashboardDataUseCase = require('./domain/usecases/getDashboardDataUseCase');
+const DashboardRepositoryImpl = require('./data/repositories/dashboardRepositoryImpl');
 
-exports.getDashboardData = (req, res) => {
-    // Email bisa dikirim lewat Body atau Query Params
+const dashboardRepository = new DashboardRepositoryImpl();
+const getDashboardDataUseCase = new GetDashboardDataUseCase(dashboardRepository);
+
+exports.getDashboardData = async (req, res) => {
+  try {
     const email = req.query.email || req.body.email;
 
     if (!email) {
-        return res.status(400).json({ success: false, message: 'Email is required' });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email is required' 
+      });
     }
 
-    DashboardModel.getUserProfile(email, (err, results) => {
-        if (err) {
-            console.error("LOG ERROR MYSQL:", err.sqlMessage);
-            return res.status(500).json({ success: false, message: 'Database error', error: err });
-        }
+    const result = await getDashboardDataUseCase.executeGetDashboardData(email);
 
-        if (results.length === 0) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
+    res.status(200).json(result);
 
-        const user = results[0];
-
-        // Format respon agar rapi
-        const responseData = {
-            displayName: user.full_name,
-            gender: user.gender,
-            weight: user.weight_kg,
-            height: user.height_cm,
-            tdee: user.calculated_tdee,
-            bmr: user.calculated_bmr,
-            // Kita bisa tambah logika lain di sini nanti
-        };
-
-        res.status(200).json({ 
-            success: true, 
-            data: responseData 
-        });
+  } catch (error) {
+    console.error("❌ Dashboard Controller Error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Gagal memuat data dashboard' 
     });
+  }
 };
