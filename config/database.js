@@ -5,7 +5,10 @@ const db = mysql.createConnection({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'db_nutrigenius'
+    database: process.env.DB_NAME || 'db_nutrigenius',
+
+    timezone: '+07:00',
+    dateStrings: true
 });
 
 db.connect((err) => {

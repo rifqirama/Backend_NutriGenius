@@ -12,13 +12,12 @@ const HistoryModel = {
                 sh.fat,
                 sh.sugar,
                 sh.imagePath AS image_path,  -- Alias lagi
-                sh.createdAt AS date,
-                -- ⚠️ PENTING: Kita TIDAK ambil 'aiSuggestion' disini biar loading cepat!
+                DATE_FORMAT(sh.scan_timestamp, '%Y-%m-%dT%H:%i:%s') AS created_at,                -- ⚠️ PENTING: Kita TIDAK ambil 'aiSuggestion' disini biar loading cepat!
                 u.email
             FROM journal_details sh
             JOIN users u ON sh.userId = u.id
             WHERE u.email = ?
-            ORDER BY sh.createdAt DESC
+            ORDER BY sh.scan_timestamp DESC
         `;
         
         db.query(query, [email], callback);
@@ -29,7 +28,7 @@ const HistoryModel = {
             SELECT 
                 id, foodName AS food_name, calories, protein, carbs, fat, sugar, 
                 aiSuggestion AS ai_suggestion, -- Nah, disini baru kita ambil teks panjangnya
-                imagePath AS image_path, createdAt AS date 
+                imagePath AS image_path, scan_timestamp AS createdAt 
             FROM journal_details 
             WHERE id = ?
         `;
