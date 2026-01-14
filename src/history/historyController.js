@@ -41,9 +41,22 @@ exports.addHistory = (req, res) => {
 };
 
 exports.deleteHistory = (req, res) => {
-    const id = req.params.id;
-    HistoryModel.delete(id, (err, result) => {
-        if (err) return res.status(500).json({ success: false, error: err });
-        res.status(200).json({ success: true, message: "Riwayat dihapus!" });
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "Daftar ID tidak valid atau kosong." 
+        });
+    }
+
+    HistoryModel.deleteMultiple(ids, (err, result) => {
+        if (err) {
+            console.error("❌ Error Delete History:", err);
+            return res.status(500).json({ success: false, error: err });
+        }
+        res.status(200).json({ 
+            success: true, 
+            message: `${result.affectedRows} riwayat berhasil dihapus!` 
+        });
     });
 };

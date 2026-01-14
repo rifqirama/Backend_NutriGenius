@@ -36,7 +36,7 @@ const HistoryModel = {
         db.query(query, [id], callback);
     },
 
-    delete: (id, callback) => {
+    deleteMultiple: (id, callback) => {
         const query = 'DELETE FROM journal_details WHERE id = ?';
         db.query(query, [id], callback);
     }

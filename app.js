@@ -32,6 +32,8 @@ app.use('./api/notifications', notificationRoutes)
 app.use('/api/profile', profileRoutes);
 app.use('/api/scan', scanRoutes);
 
+app.use('/api/scan/history', historyRoutes);
+
 // Test Route
 app.get('/', (req, res) => {
     res.send('NutriGenius Backend is Running...');

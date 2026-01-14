@@ -38,7 +38,7 @@ router.post('/save', scanController.saveScanResult);
 
 router.get('/', historyController.getHistory); 
 
-router.delete('/:id', historyController.deleteHistory);
+router.delete('/', historyController.deleteHistory);
 
 router.post('/add', historyController.addHistory);
 
